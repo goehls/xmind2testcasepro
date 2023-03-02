@@ -4,7 +4,8 @@ import logging
 import sys
 from xmind2testcase.zentao import xmind_to_zentao_csv_file
 from xmind2testcase.testlink import xmind_to_testlink_xml_file
-from xmind2testcase.utils import get_absolute_path, xmind_testcase_to_json_file
+from xmind2testcase.utils import get_absolute_path
+from xmind2testcase.services import gen_testcase_to_json_file
 from webtool.application import launch
 
 logging.basicConfig(level=logging.INFO,
@@ -36,7 +37,7 @@ def cli_main():
         logging.info('Start to convert XMind file: %s', xmind_file)
 
         if len(sys.argv) == 3 and sys.argv[2] == '-json':
-            testlink_json_file = xmind_testcase_to_json_file(xmind_file)
+            testlink_json_file = gen_testcase_to_json_file(xmind_file)
             logging.info('Convert XMind file to testcase json file successfully: %s', testlink_json_file)
         elif len(sys.argv) == 3 and sys.argv[2] == '-xml':
             testlink_xml_file = xmind_to_testlink_xml_file(xmind_file)
@@ -45,7 +46,7 @@ def cli_main():
             zentao_csv_file = xmind_to_zentao_csv_file(xmind_file)
             logging.info('Convert XMind file to zentao csv file successfully: %s', zentao_csv_file)
         else:
-            testlink_json_file = xmind_testcase_to_json_file(xmind_file)
+            testlink_json_file = gen_testcase_to_json_file(xmind_file)
             testlink_xml_file = xmind_to_testlink_xml_file(xmind_file)
             zentao_csv_file = xmind_to_zentao_csv_file(xmind_file)
             logging.info('Convert XMind file successfully: \n'

@@ -3,7 +3,8 @@
 import csv
 import logging
 import os
-from xmind2testcase.utils import get_xmind_testcase_list, get_absolute_path
+from xmind2testcase.utils import get_absolute_path
+from xmind2testcase.services import get_testcase_list
 
 """
 Convert XMind fie to Zentao testcase csv file 
@@ -16,7 +17,7 @@ def xmind_to_zentao_csv_file(xmind_file):
     """Convert XMind file to a zentao csv file"""
     xmind_file = get_absolute_path(xmind_file)
     logging.info('Start converting XMind file(%s) to zentao file...', xmind_file)
-    testcases = get_xmind_testcase_list(xmind_file)
+    testcases = get_testcase_list(xmind_file)
 
     fileheader = ["所属模块", "用例标题", "前置条件", "步骤", "预期", "关键词", "优先级", "用例类型", "适用阶段"]
     zentao_testcase_rows = [fileheader]
@@ -67,7 +68,7 @@ def gen_case_step_and_expected_result(steps):
     for step_dict in steps:
         case_step += str(step_dict['step_number']) + '. ' + step_dict['actions'].replace('\n', '').strip() + '\n'
         case_expected_result += str(step_dict['step_number']) + '. ' + \
-            step_dict['expectedresults'].replace('\n', '').strip() + '\n' \
+            '------'.join(step_dict['expectedresults']).replace('\n', '').strip() + '\n' \
             if step_dict.get('expectedresults', '') else ''
 
     return case_step, case_expected_result

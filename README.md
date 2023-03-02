@@ -1,8 +1,70 @@
+
+# XMind2TestCasePro
+:::success
+- 标题：文章模板
+- 分类：`模板`
+- 标签：`test`、`autotest`
+- 简介：这个是文章模板
+:::
+
+---
+
+![](https://cdn.nlark.com/yuque/0/2023/jpeg/2519304/1677758608430-b049b0da-5950-4684-a34d-024ab77d3a69.jpeg)
+
+<a name="pTuQo"></a>
+## 1. 区别
+`[xmind2testcase](https://github.com/zhuifengshen/xmind2testcase/tree/master/xmind2testcase)`与`[xmind2testcasepro](https://github.com/goehls/xmind2testcasepro)`的区别：
+
+- 支持新版本的xmind文件的解析，同时支持旧版本的xmind文件的解析
+- 用例的展示更加丰富，更加精细。
+   - 在保持testcase title的前提下，将非testcase节点的部分提取为Category
+   - 不同节点的title链接的展示优化
+- 测试模板支持一个测试步骤包含多个预期结果。
+
+
+## 2. 测试用例模板
+
+### 2.1 用例模板
+[用例模板](docs/new/)
+[[公众号：波小艺] 测试用例 模版.xmind](docs%2Fnew%2F%5B%E5%85%AC%E4%BC%97%E5%8F%B7%EF%BC%9A%E6%B3%A2%E5%B0%8F%E8%89%BA%5D%20%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%20%E6%A8%A1%E7%89%88.xmind)
+![image.png](https://cdn.nlark.com/yuque/0/2023/png/2519304/1677761843585-c6d86a15-53f6-4686-ad7f-02b18da22619.png#averageHue=%23fdfcfc&clientId=uc02f5cde-05a5-4&from=paste&height=942&id=uf561cec7&name=image.png)<br />标签（label）：**测试用例**、**执行步骤、预期结果**、**前置条件**、**优先级**标签（如：P1）<br />标记（marker）：优先级标记，label优先级更高<br />备注：summary。测试用例节点才会被解析。
+
+
+### 2.2 模板解析规则
+
+- 中心主题默认为产品名称
+- 中心主题的第一层会被识别为`testsuite`
+- 包含`测试用例`标签的节点的会识别为`testcase`
+- `testsuite`- `testcase`之间的节点title被识别为用例的分类（Category）
+- `testcase`的子主题包含`前置条件`标签的为`PreConditions`、包含`执行步骤`标签的为`teststep`
+- `teststep`的子主题包含`预期结果`标签的为`ExpectResults`，一个执行步骤可以包含多个预期结果。
+- `testcase`的优先级可用marker进行标记。也可以通过label进行标记（如P0，priority 1），label的优先级更高
+- `testcase`的执行类型通过label定义：`手动`、`自动`。默认为`手动`。
+- `testcase`的摘要summary通过`testcase`节点的备注记录
+- `testcase`节点包含`ignore`标签时，会被打上一个`ignore`的标记
+- 自由主题不会被解析
+
+
+<a name="yKo9C"></a>
+## 3. 模板解析结果
+`xmind2testcasepro`解析并渲染到前端的结果如下：
+
+![image.png](https://cdn.nlark.com/yuque/0/2023/png/2519304/1677759304021-a8de7581-10e8-4b3f-83d2-671a72594da4.png)
+
+- Suite表示模块名称。
+- Category表示**模块节点**到**测试用例节点**中间包含的这些节点的集合。
+- Title表示测试用例名称。
+- PreConditions表示前置条件，可以包含多个。
+- Attributes包含用例的优先级priority，测试用例节点的备注summary。
+- Steps表示执行步骤以及预期结果，一个执行步骤可对应多个预期结果。
+- 对于无效的用例，忽略的用例，用户可以选择是否将其展示出来。
+
+
 # XMind2TestCase
 
 > **XMind2TestCase** 工具，提供了一个高效测试用例设计的解决方案！
 
-
+fork 仓库：https://github.com/zhuifengshen/xmind2testcase
 ### 一、背景
 
 软件测试过程中，最重要、最核心就是测试用例的设计，也是测试童鞋、测试团队日常投入最多时间的工作内容之一。

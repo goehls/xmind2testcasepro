@@ -19,10 +19,12 @@
     <thead>
     <tr>
         <th width="5%">#</th>
-        <th width="10%">Suite</th>
-        <th>Title</th>
-        <th width="200px">Attributes</th>
-        <th width="23%">Steps</th>
+        <th width="5%">Suite</th>
+        <th width="10%">Category</th>
+        <th width="10%">Title</th>
+        <th width="10%">PreConditions</th>
+        <th width=10%">Attributes</th>
+        <th width="40%">Steps</th>
     </tr>
     </thead>
     <tbody>
@@ -30,11 +32,14 @@
         <tr>
             <td>{{ loop.index }}</td>
             <td>{{ test.suite }}</td>
+            <td>{{ test.category | replace('\n','<br>') |safe }}</td>
+
             <td {% if test.name|length>100 %}class="long-name" {% endif %}>{{ test.name }}
                 {% if test.name|length>100 %}
                     <span class="long-name-info">Warn: test name might be too long: {{ test.name|length }}!</span>
                 {% endif %}
             </td>
+            <td>{{ test.preconditions | replace('\n','<br>') |safe }}</td>
             <td>
                 <div class="tag-success tooltip">
                     Priority {{ test.importance }}
@@ -60,9 +65,11 @@
                         {% for step in test.steps %}
                             <li>{{ step.actions }}
                                 {% if step.expectedresults %}
-                                    <ul>
-                                        <li>{{ step.expectedresults }}</li>
-                                    </ul>
+                                    {% for expected_result in step.expectedresults %}
+                                        <ul>
+                                            <li>{{ expected_result }}</li>
+                                        </ul>
+                                    {% endfor %}
                                 {% endif %}
                             </li>
                         {% endfor %}

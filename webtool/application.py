@@ -3,15 +3,18 @@
 import logging
 import os
 import re
-import arrow
 import sqlite3
 from contextlib import closing
 from os.path import join, exists
-from werkzeug.utils import secure_filename
-from xmind2testcase.zentao import xmind_to_zentao_csv_file
-from xmind2testcase.testlink import xmind_to_testlink_xml_file
-from xmind2testcase.utils import get_xmind_testsuites, get_xmind_testcase_list
+
+import arrow
 from flask import Flask, request, send_from_directory, g, render_template, abort, redirect, url_for
+from werkzeug.utils import secure_filename
+
+# from xmind2testcase.utils import get_xmind_testsuites, get_xmind_testcase_list
+from xmind2testcase.services import get_testcase_list, count_testsuits
+from xmind2testcase.testlink import xmind_to_testlink_xml_file
+from xmind2testcase.zentao import xmind_to_zentao_csv_file
 
 here = os.path.abspath(os.path.dirname(__file__))
 log_file = os.path.join(here, 'running.log')
@@ -64,6 +67,7 @@ def init():
         os.mkdir(UPLOAD_FOLDER)
 
     if not exists(DATABASE):
+        app.logger.info('test')
         init_db()
     app.logger.info('Congratulations! the xmind2testcase webtool database has initialized successfully!')
 
@@ -152,7 +156,7 @@ def get_records(limit=8):
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 def check_file_name(name):
@@ -262,20 +266,14 @@ def preview_file(filename):
 
     if not exists(full_path):
         abort(404)
-
-    testsuites = get_xmind_testsuites(full_path)
-    suite_count = 0
-    for suite in testsuites:
-        suite_count += len(suite.sub_suites)
-
-    testcases = get_xmind_testcase_list(full_path)
+    suite_count = count_testsuits(full_path)
+    testcases = get_testcase_list(full_path)
 
     return render_template('preview.html', name=filename, suite=testcases, suite_count=suite_count)
 
 
 @app.route('/delete/<filename>/<int:record_id>')
 def delete_file(filename, record_id):
-
     full_path = join(app.config['UPLOAD_FOLDER'], filename)
     if not exists(full_path):
         abort(404)
@@ -286,6 +284,7 @@ def delete_file(filename, record_id):
 
 @app.errorhandler(Exception)
 def app_error(e):
+    logging.exception(f'error:{e}')
     return str(e)
 
 
@@ -296,4 +295,4 @@ def launch(host=HOST, debug=True, port=5001):
 
 if __name__ == '__main__':
     init()  # initializing the database
-    app.run(HOST, debug=DEBUG, port=5001)
+    app.run(HOST, debug=DEBUG, port=5002)

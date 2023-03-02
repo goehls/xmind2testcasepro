@@ -6,8 +6,8 @@ from io import BytesIO
 from xml.dom import minidom
 from xml.sax.saxutils import escape
 from xmind2testcase import const
-from xmind2testcase.parser import config
-from xmind2testcase.utils import get_xmind_testsuites, get_absolute_path
+from xmind2testcase.const import config
+from xmind2testcase.services import get_raw_testsuites, get_absolute_path
 from xml.etree.ElementTree import Element, SubElement, ElementTree, Comment
 
 """
@@ -19,7 +19,7 @@ def xmind_to_testlink_xml_file(xmind_file, is_all_sheet=True):
     """Convert a XMind sheet to a testlink xml file"""
     xmind_file = get_absolute_path(xmind_file)
     logging.info('Start converting XMind file(%s) to testlink file...', xmind_file)
-    testsuites = get_xmind_testsuites(xmind_file)
+    testsuites = get_raw_testsuites(xmind_file)
     if not is_all_sheet and testsuites:
         testsuites = [testsuites[0]]
 
