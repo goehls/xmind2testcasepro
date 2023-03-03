@@ -1,4 +1,5 @@
 # XMind2TestCasePro
+<img src="https://user-images.githubusercontent.com/77818535/222654148-4959af6b-cb31-48f0-af4b-fed92a016087.png" width="50%">
 
 ## 1. 区别
 [xmind2testcase](https://github.com/zhuifengshen/xmind2testcase/tree/master/xmind2testcase)与[xmind2testcasepro](https://github.com/goehls/xmind2testcasepro)的区别：
@@ -13,7 +14,7 @@
 ## 2. 测试用例模板
 
 ### 2.1 用例模板
-[用例模板](docs/new/)
+[新的用例模板](docs/new/)
 [[公众号：波小艺] 测试用例 模版.xmind](docs%2Fnew%2F%5B%E5%85%AC%E4%BC%97%E5%8F%B7%EF%BC%9A%E6%B3%A2%E5%B0%8F%E8%89%BA%5D%20%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%20%E6%A8%A1%E7%89%88.xmind)
 ![image.png](https://cdn.nlark.com/yuque/0/2023/png/2519304/1677761843585-c6d86a15-53f6-4686-ad7f-02b18da22619.png#averageHue=%23fdfcfc&clientId=uc02f5cde-05a5-4&from=paste&height=942&id=uf561cec7&name=image.png)<br />标签（label）：**测试用例**、**执行步骤、预期结果**、**前置条件**、**优先级**标签（如：P1）<br />标记（marker）：优先级标记，label优先级更高<br />备注：summary。测试用例节点才会被解析。
 
@@ -143,10 +144,10 @@ v1.5.0
 
 v2.0.0
 1、支持xmind新版本文件的解析
-2、用例格式优化
+2、针对新版本的xmind文件的用例格式优化
+3、支持一个测试步骤包含多个预期结果的解析
 ```
 
-![波小艺](http://www.baidu.com)
 ## 9. 额外信息
 ### XMind2TestCase工具的背景 （[背景来源](https://github.com/zhuifengshen/xmind2testcase)）
 
