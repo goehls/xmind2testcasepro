@@ -41,6 +41,7 @@
                                 <a href="{{ url_for('download_zentao_file',filename=record[1]) }}">CSV</a> |
                                 <a href="{{ url_for('download_testlink_file',filename=record[1]) }}">XML</a> |
                                 <a href="{{ url_for('preview_file',filename=record[1]) }}">PREVIEW</a> |
+                                <a href="{{ url_for('preview_file_v2',filename=record[1]) }}">PREVIEW_v2</a> |
                                 <a href="{{ url_for('delete_file',filename=record[1], record_id=record[4]) }}">DELETE</a>
                             </td>
                         </tr>

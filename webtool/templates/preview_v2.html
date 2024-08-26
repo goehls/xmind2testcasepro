@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ name }} | Xmind2TestCase Preview</title>
+    <link rel="shortcut icon" href="{{ url_for('static',filename='favicon.ico') }}" type="image/x-icon"/>
+    <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/pure-min.css') }}">
+    <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/custom.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            color: black; /* 设置输入框文字颜色为黑色 */
+            background-color: white; /* 设置输入框背景颜色为白色 */
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>{{ name }} - Preview</h1>
+    <h2>TestSuites: {{ suite_count }} / TestCases: {{ suite | length }}
+        / <a href="{{ url_for("download_zentao_file",filename= name) }}">Get Zentao CSV</a>
+        / <a href="{{ url_for("download_testlink_file",filename= name) }}">Get TestLink XML</a>
+        / <a href="{{ url_for("index") }}">Go Back</a></h2>
+    <button id="exportBtn">导出为CSV</button>
+</div>
+
+<table class="pure-table tests-table" id="myTable">
+    <thead>
+    <tr>
+        <th width="5%">#</th>
+        <th width="5%">Priority</th>
+        <th width="10%">Case Title & Description</th>
+        <th width="10%">Preconditions (if any)</th>
+        <th width=10%">Steps</th>
+        <th width="40%">Expected results</th>
+    </tr>
+    <tr>
+        <th></th>
+        <th><input type="text" placeholder="优先级"></th>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for test in suite %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>
+                {{ test.priority }}
+
+            </td>
+            <td {% if test.name|length>100 %}class="long-name" {% endif %}>{{ test.name }}
+                {% if test.name|length>100 %}
+                    <span class="long-name-info">Warn: test name might be too long: {{ test.name|length }}!</span>
+                {% endif %}
+            </td>
+            <td>{{ test.preconditions | replace('\n','<br>') |safe }}</td>
+
+            <td>
+                {% if test.steps %}
+                    <ol>
+                        {% for step in test.steps %}
+                            <li>{{ step.actions }}
+                            </li>
+                        {% endfor %}
+                    </ol>
+                {% endif %}
+            </td>
+            <td>
+                {% if test.steps %}
+                    <ol>
+                        {% for step in test.steps %}
+                            {% if step.expectedresults_v2 %}
+                                <li>{{ step.expectedresults_v2 }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ol>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<div class="footer">
+    <a href="{{ url_for('static', filename='guide/index.html') }}" target="_blank">User Guide</a> |
+    <a href="https://github.com/zhuifengshen/xmind2testcase/issues/new" target="_blank">Report Issue</a> |
+    Powered by <a href="https://github.com/zhuifengshen/xmind2testcase" target="_blank">XMind2TestCase</a>
+</div>
+<script>
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+                   // 定义筛选函数
+            function filterTable(columnIndex) {
+                const inputs = document.querySelectorAll('input');
+                console.log("len()", inputs.length)
+                console.log("inputs:", inputs)
+                const filter = inputs[columnIndex].value.toLowerCase();
+                const rows = document.querySelectorAll('#myTable tbody tr');
+
+                rows.forEach(row => {
+                    const cells = row.getElementsByTagName('td');
+                    const cellText = cells[columnIndex+1].innerText.toLowerCase();
+                    row.style.display = cellText.includes(filter) ? '' : 'none';
+                });
+            }
+
+            // 绑定输入框的事件
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach((input, index) => {
+                console.log("index",index)
+                input.addEventListener('keyup', () => filterTable(index));
+            });
+
+        const exportBtn = document.getElementById('exportBtn');
+        const table = document.getElementById('myTable');
+
+        exportBtn.addEventListener('click', function () {
+            let csv = [];
+            {#let row of document.querySelectorAll('#myTable tr')#}
+            {#let row of table.rows#}
+            for (let row of table.rows) {
+                if (row.style.display === 'none') { // 仅导出可见行
+                    continue
+                }
+                let cols = Array.from(row.cells).map(cell => {
+                    // 提取列表项并保留序号
+                    const listItems = cell.querySelectorAll('li');
+                    const listText = Array.from(listItems).map((li, index) => `${index + 1}. ${li.innerText}`).join('\n');
+
+                    // 如果单元格中有列表项，返回格式化后的列表文本；否则返回单元格文本
+                    let cellText = listText || cell.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+
+                    // 用双引号包裹并转义内部双引号
+                    return `"${cellText.replace(/"/g, '""')}"`;
+                });
+
+                // 将列数据用逗号分隔
+                csv.push(cols.join(','));
+            }
+            const csvString = csv.join('\n');
+            const blob = new Blob([csvString], {type: 'text/csv;charset=utf-8;'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'table.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+    });
+
+</script>
+
+</body>
+</html>
