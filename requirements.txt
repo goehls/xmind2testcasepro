@@ -3,4 +3,3 @@ flask~=3.0.3
 werkzeug~=3.0.3
 setuptools~=68.2.0
 XMind~=1.2.0
-gunicorn==23.0.0
