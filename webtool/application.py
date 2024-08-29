@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import sqlite3
+from collections import defaultdict
 from contextlib import closing
 from os.path import join, exists
 from unittest import expectedFailure
@@ -267,8 +268,13 @@ def preview_file(filename):
 
     if not exists(full_path):
         abort(404)
-    suite_count = count_testsuits(full_path)
+    # suite_count = count_testsuits(full_path)
     testcases = get_testcase_list(full_path)
+    test_suites = defaultdict(list)
+    for testcase in testcases:
+        test_suites[testcase['suite']].append(testcase)
+
+    suite_count = len(test_suites.keys())
 
     return render_template('preview.html', name=filename, suite=testcases, suite_count=suite_count)
 
@@ -279,7 +285,7 @@ def preview_file_v2(filename):
 
     if not exists(full_path):
         abort(404)
-    suite_count = count_testsuits(full_path)
+    # suite_count = count_testsuits(full_path)
     testcases = get_testcase_list(full_path)
     for testcase in testcases:
         case_name = testcase['name']
@@ -300,6 +306,14 @@ def preview_file_v2(filename):
             if len(expectedresults) == 0:
                 expectedresults_v2 = '-'
             step['expectedresults_v2'] = expectedresults_v2
+
+
+    test_suites = defaultdict(list)
+
+    for testcase in testcases:
+        test_suites[testcase['suite']].append(testcase)
+
+    suite_count = len(test_suites.keys())
 
     return render_template('preview_v2.html', name=filename, suite=testcases, suite_count=suite_count)
 
