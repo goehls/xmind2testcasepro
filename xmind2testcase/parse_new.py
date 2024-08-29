@@ -104,21 +104,46 @@ class ParseNew(ParseXmind):
 
         return preconditions
 
-    def parse_test_steps(self, attached_topics):
+    def parse_data_format(self, testcase_attached_topics):
+        FORMATS = ["SingleStepTopic", "MutilStepTopic"]
+        testcase_attached_topics = [AttachedTopicAttribute(topic) for topic in testcase_attached_topics]
+
+        if len(testcase_attached_topics) == 3 and testcase_attached_topics[0].is_precondition\
+                and testcase_attached_topics[1].is_teststep and testcase_attached_topics[2].is_expect_result:
+            return FORMATS[0]
+        else:
+            return FORMATS[1]
+    def parse_test_steps(self, testcase_attached_topics):
         steps = []
         attached_step_topics = []
-        for attached_topic in attached_topics:
-            cur_attached_step_topic = AttachedTopicAttribute(attached_topic)
-            if not cur_attached_step_topic.is_teststep:
-                continue
-            attached_step_topics.append(cur_attached_step_topic)
+        attached_expect_result_topics = []
 
-        for step_num, cur_attached_step_topic in enumerate(attached_step_topics, start=1):
-            if not cur_attached_step_topic.is_teststep:
-                continue
-            test_step = self.parse_a_test_step(cur_attached_step_topic)
-            test_step.step_number = step_num
-            steps.append(test_step)
+        if self.parse_data_format(testcase_attached_topics) == "MutilStepTopic":
+            for attached_topic in testcase_attached_topics:
+                cur_attached_step_topic = AttachedTopicAttribute(attached_topic)
+                if cur_attached_step_topic.is_teststep:
+                    attached_step_topics.append(cur_attached_step_topic)
+                if cur_attached_step_topic.is_expect_result:
+                    attached_expect_result_topics.append(cur_attached_step_topic)
+
+            for step_num, cur_attached_step_topic in enumerate(attached_step_topics, start=1):
+                if not cur_attached_step_topic.is_teststep:
+                    continue
+                test_step = self.parse_a_test_step(cur_attached_step_topic)
+                test_step.step_number = step_num
+                steps.append(test_step)
+
+        else:
+            for attached_topic in testcase_attached_topics:
+                cur_attached_step_topic = AttachedTopicAttribute(attached_topic)
+                if cur_attached_step_topic.is_teststep:
+                    attached_step_topics.append(cur_attached_step_topic)
+                if cur_attached_step_topic.is_expect_result:
+                    attached_expect_result_topics.append(cur_attached_step_topic)
+
+
+            steps = self.parse_a_test_step_single(attached_step_topics[0], attached_expect_result_topics[0])
+
 
         return steps
 
@@ -140,3 +165,42 @@ class ParseNew(ParseXmind):
 
         logging.debug('finds a teststep: %s', test_step.to_dict())
         return test_step
+
+    def parse_a_test_step_single(self, cur_attached_step_topic, cur_attached_expect_result_topic):
+        steps = []
+        test_steps = cur_attached_step_topic.sub_attached_topics
+        expected_topics = cur_attached_expect_result_topic.sub_attached_topics
+        test_steps_num = len(test_steps)
+        expected_topics_num = len(expected_topics)
+        for step_num, current_topic in enumerate(test_steps, start=1):
+            test_step = TestStep()
+            current_topic = AttachedTopicAttribute(current_topic)
+            test_step.actions = current_topic.title
+            test_step.step_number = step_num
+            if test_steps_num == expected_topics_num:
+                expected_topic = AttachedTopicAttribute(expected_topics[step_num-1])
+                title = expected_topic.title
+                # num, title = self.get_topic_num(title)
+            else:
+                # expected_topic = self.get_topic_num(expected_topic.title)
+                try:
+                    expected_topic = AttachedTopicAttribute(expected_topics.pop())
+                    title = expected_topic.title
+                    # num, title = self.get_topic_num(title)
+                except Exception as e:
+                    title = ''
+
+            test_step.expectedresults = [title]
+            steps.append(test_step)
+        return steps
+
+    def get_topic_num(self, topic_name):
+        number = ""
+        new_title = ""
+        for i,char in enumerate(topic_name):
+            if char.isdigit():
+                number += char
+            else:
+                new_title = new_title[i:]
+                break
+        return int(number),new_title

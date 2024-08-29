@@ -96,7 +96,7 @@ def get_testcase_list(xmind_file):
     """
     xmind_file = get_absolute_path(xmind_file)
     logging.info('Start converting XMind file(%s) to testcases dict data...', xmind_file)
-    testsuites = get_raw_testsuites(xmind_file)
+    testsuites = get_raw_testsuites(xmind_file) or []
     testcases = []
 
     for testsuite in testsuites:
