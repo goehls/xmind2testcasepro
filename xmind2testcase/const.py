@@ -44,7 +44,7 @@ EXECUTION_AUTO_TYPE = 2
 
 config = {'sep': '<font color="red"> >> </font>',
           'valid_sep': '&>+/-',
-          'precondition_sep': '\n----\n',
+          'precondition_sep': '\n && \n',
           'summary_sep': '\n----\n',
           'step': '\n#####\n',
           'ignore_char': '#!！'
