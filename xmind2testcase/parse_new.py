@@ -108,24 +108,48 @@ class ParseNew(ParseXmind):
         FORMATS = ["SingleStepTopic", "MutilStepTopic"]
         testcase_attached_topics = [AttachedTopicAttribute(topic) for topic in testcase_attached_topics]
 
-        if len(testcase_attached_topics) == 3 and testcase_attached_topics[0].is_precondition\
+        if len(testcase_attached_topics) == 3 and testcase_attached_topics[0].is_precondition \
                 and testcase_attached_topics[1].is_teststep and testcase_attached_topics[2].is_expect_result:
             return FORMATS[0]
         else:
             return FORMATS[1]
+
     def parse_test_steps(self, testcase_attached_topics):
         steps = []
         attached_step_topics = []
         attached_expect_result_topics = []
-
+        raw_attached_expect_result_topics = []
         if self.parse_data_format(testcase_attached_topics) == "MutilStepTopic":
+            has_step = False
             for attached_topic in testcase_attached_topics:
                 cur_attached_step_topic = AttachedTopicAttribute(attached_topic)
                 if cur_attached_step_topic.is_teststep:
-                    attached_step_topics.append(cur_attached_step_topic)
+                    has_step = True
+                    break
+            for attached_topic in testcase_attached_topics:
+                cur_attached_step_topic = AttachedTopicAttribute(attached_topic)
                 if cur_attached_step_topic.is_expect_result:
                     attached_expect_result_topics.append(cur_attached_step_topic)
+                    raw_attached_expect_result_topics.append(attached_topic)
+                elif cur_attached_step_topic.is_teststep:
+                    attached_step_topics.append(cur_attached_step_topic)
+                else:
+                    # 如果不存在执行步骤，则默认按为预期结果
+                    cur_attached_step_topic.is_expect_result = True
+                    attached_expect_result_topics.append(cur_attached_step_topic)
+                    attached_topic['labels'] = [const.EXPECT_RESULT_TAG]
+                    raw_attached_expect_result_topics.append(attached_topic)
 
+
+            if not has_step:
+                attached_step_topics.append(AttachedTopicAttribute(
+                    {
+                        "title": 'non_step', "labels": [const.TESTSTEP_TAG ],
+                        "children": {
+                            "attached": raw_attached_expect_result_topics
+                        }
+                    }
+                ))
             for step_num, cur_attached_step_topic in enumerate(attached_step_topics, start=1):
                 if not cur_attached_step_topic.is_teststep:
                     continue
@@ -141,9 +165,7 @@ class ParseNew(ParseXmind):
                 if cur_attached_step_topic.is_expect_result:
                     attached_expect_result_topics.append(cur_attached_step_topic)
 
-
             steps = self.parse_a_test_step_single(attached_step_topics[0], attached_expect_result_topics[0])
-
 
         return steps
 
@@ -178,7 +200,7 @@ class ParseNew(ParseXmind):
             test_step.actions = current_topic.title
             test_step.step_number = step_num
             if test_steps_num == expected_topics_num:
-                expected_topic = AttachedTopicAttribute(expected_topics[step_num-1])
+                expected_topic = AttachedTopicAttribute(expected_topics[step_num - 1])
                 title = expected_topic.title
                 # num, title = self.get_topic_num(title)
             else:
@@ -197,10 +219,10 @@ class ParseNew(ParseXmind):
     def get_topic_num(self, topic_name):
         number = ""
         new_title = ""
-        for i,char in enumerate(topic_name):
+        for i, char in enumerate(topic_name):
             if char.isdigit():
                 number += char
             else:
                 new_title = new_title[i:]
                 break
-        return int(number),new_title
+        return int(number), new_title
