@@ -226,7 +226,7 @@ def index(download_xml=None):
         g.upload_form = True
 
     if g.filename:
-        return redirect(url_for('preview_file', filename=g.filename))
+        return redirect(url_for('preview_file_v2', filename=g.filename))
     else:
         return render_template('index.html', records=list(get_records()))
 

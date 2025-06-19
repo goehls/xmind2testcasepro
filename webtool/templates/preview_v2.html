@@ -1,179 +1,518 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>{{ name }} | Xmind2TestCase Preview</title>
-    <link rel="shortcut icon" href="{{ url_for('static',filename='favicon.ico') }}" type="image/x-icon"/>
+    <link rel="shortcut icon" href="{{ url_for('static',filename='favicon.ico') }}" type="image/x-icon" />
     <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/pure-min.css') }}">
     <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/custom.css') }}">
     <style>
         body {
             font-family: Arial, sans-serif;
         }
-
+        
         input {
             width: 100%;
             box-sizing: border-box;
-            color: black; /* 设置输入框文字颜色为黑色 */
-            background-color: white; /* 设置输入框背景颜色为白色 */
+            color: black;
+            background-color: white;
         }
-
+        
         table {
             border-collapse: collapse;
             width: 100%;
         }
-
-        th, td {
+        
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
-
+        
         th {
             background-color: #f2f2f2;
         }
+        
+        .checkbox-cell {
+            width: 5%;
+            text-align: center;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        .action-buttons {
+            margin: 10px 0;
+        }
+        
+        .action-buttons button {
+            margin-right: 10px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .action-buttons button:hover {
+            background-color: #45a049;
+        }
+        
+        .action-buttons button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .selected-count {
+            margin-left: 10px;
+            color: #666;
+        }
+        /* 多选过滤样式 */
+        
+        .priority-filter {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .priority-filter input {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            padding-right: 30px;
+        }
+        
+        .priority-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgb(160, 157, 157);
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 4px rgba(224, 79, 79, 0.463);
+        }
+        
+        .priority-dropdown.show {
+            display: block;
+        }
+        
+        .priority-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .priority-option:last-child {
+            border-bottom: none;
+        }
+        
+        .priority-option:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .priority-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: #3498db;
+        }
+        
+        .priority-option label {
+            cursor: pointer;
+            margin: 0;
+            flex: 1;
+        }
+        
+        .priority-count {
+            color: #666;
+            font-size: 12px;
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="header">
-    <h1>{{ name }} - Preview</h1>
-    <h2>TestSuites: {{ suite_count }} / TestCases: {{ suite | length }}
-        / <a href="{{ url_for("download_zentao_file",filename= name) }}">Get Zentao CSV</a>
-        / <a href="{{ url_for("download_testlink_file",filename= name) }}">Get TestLink XML</a>
-        / <a href="{{ url_for("index") }}">Go Back</a></h2>
-    <button id="exportBtn">导出为CSV</button>
-</div>
+    <div class="header">
+        <h1>{{ name }} - Preview</h1>
+        <h2>TestSuites: {{ suite_count }} / TestCases: {{ suite | length }} / <a href="{{ url_for('download_zentao_file',filename=name) }}">Get Zentao CSV</a> / <a href="{{ url_for('download_testlink_file',filename=name) }}">Get TestLink XML</a> / <a href="{{ url_for('index') }}">Go Back</a></h2>
 
-<table class="pure-table tests-table" id="myTable">
-    <thead>
-    <tr>
-        <th width="5%">#</th>
-        <th width="5%">Priority</th>
-        <th width="10%">Case Title & Description</th>
-        <th width="10%">Preconditions (if any)</th>
-        <th width=10%">Steps</th>
-        <th width="40%">Expected results</th>
-    </tr>
-    <tr>
-        <th></th>
-        <th><input type="text" placeholder="优先级"></th>
-        <th></th>
-        <th></th>
-        <th></th>
-        <th></th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for test in suite %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>
-                {{ test.priority }}
+        <div class="action-buttons">
+            <button id="selectAllBtn">全选</button>
+            <button id="deselectAllBtn">取消全选</button>
+            <button id="exportSelectedBtn" disabled>导出选定记录</button>
+            <button id="exportAllBtn">导出所有记录</button>
+            <span class="selected-count" id="selectedCount">已选择: 0 条记录</span>
+        </div>
+    </div>
 
-            </td>
-            <td {% if test.name|length>100 %}class="long-name" {% endif %}>{{ test.name }}
-                {% if test.name|length>100 %}
-                    <span class="long-name-info">Warn: test name might be too long: {{ test.name|length }}!</span>
-                {% endif %}
-            </td>
-            <td>{{ test.preconditions | replace('\n','<br>') |safe }}</td>
-
-            <td>
-                {% if test.steps %}
+    <table class="pure-table tests-table" id="myTable">
+        <thead>
+            <tr>
+                <th class="checkbox-cell">
+                    <input type="checkbox" id="selectAllCheckbox">
+                </th>
+                <th width="5%">#</th>
+                <th width="5%">Priority</th>
+                <th width="15%">Case Title & Description</th>
+                <th width="15%">Preconditions (if any)</th>
+                <th width="25%">Steps</th>
+                <th width="40%">Expected results</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th>
+                    <div class="priority-filter">
+                        <input type="text" placeholder="优先级" readonly id="priorityFilterInput">
+                        <div class="priority-dropdown" id="priorityDropdown">
+                            <!-- 优先级选项将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </th>
+                <th><input type="text" placeholder="标题"></th>
+                <th><input type="text" placeholder="前置条件"></th>
+                <th><input type="text" placeholder="步骤"></th>
+                <th><input type="text" placeholder="预期结果"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for test in suite %}
+            <tr>
+                <td class="checkbox-cell">
+                    <input type="checkbox" class="row-checkbox" data-index="{{ loop.index0 }}">
+                </td>
+                <td>{{ loop.index }}</td>
+                <td>{{ test.priority }}</td>
+                <td {% if test.name|length>100 %}class="long-name" {% endif %}>{{ test.name }} {% if test.name|length>100 %}
+                    <span class="long-name-info">Warn: test name might be too long: {{ test.name|length }}!</span> {% endif %}
+                </td>
+                <td>{{ test.preconditions | replace('\n','<br>') |safe }}</td>
+                <td>
+                    {% if test.steps %}
                     <ol>
                         {% for step in test.steps %}
-                            <li>{{ step.actions }}
-                            </li>
+                        <li>{{ step.actions }}</li>
                         {% endfor %}
                     </ol>
-                {% endif %}
-            </td>
-            <td>
-                {% if test.steps %}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if test.steps %}
                     <ol>
-                        {% for step in test.steps %}
-                            {% if step.expectedresults_v2 %}
-                                <li>{{ step.expectedresults_v2 }}</li>
-                            {% endif %}
-                        {% endfor %}
+                        {% for step in test.steps %} {% if step.expectedresults_v2 %}
+                        <li>{{ step.expectedresults_v2 }}</li>
+                        {% endif %} {% endfor %}
                     </ol>
-                {% endif %}
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-<div class="footer">
-    <a href="{{ url_for('static', filename='guide/index.html') }}" target="_blank">User Guide</a> |
-    <a href="https://github.com/zhuifengshen/xmind2testcase/issues/new" target="_blank">Report Issue</a> |
-    Powered by <a href="https://github.com/zhuifengshen/xmind2testcase" target="_blank">XMind2TestCase</a>
-</div>
-<script>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
+    <div class="footer">
+        <a href="{{ url_for('static', filename='guide/index.html') }}" target="_blank">User Guide</a> |
+        <a href="https://github.com/zhuifengshen/xmind2testcase/issues/new" target="_blank">Report Issue</a> | Powered by <a href="https://github.com/zhuifengshen/xmind2testcase" target="_blank">XMind2TestCase</a>
+    </div>
 
-    document.addEventListener('DOMContentLoaded', function () {
-                   // 定义筛选函数
-            function filterTable(columnIndex) {
-                const inputs = document.querySelectorAll('input');
-                console.log("len()", inputs.length)
-                console.log("inputs:", inputs)
-                const filter = inputs[columnIndex].value.toLowerCase();
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const deselectAllBtn = document.getElementById('deselectAllBtn');
+            const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+            const exportAllBtn = document.getElementById('exportAllBtn');
+            const selectedCountSpan = document.getElementById('selectedCount');
+            const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+            const table = document.getElementById('myTable');
+
+            // Priority多选过滤相关元素
+            const priorityFilterInput = document.getElementById('priorityFilterInput');
+            const priorityDropdown = document.getElementById('priorityDropdown');
+
+            // 存储选中的优先级
+            let selectedPriorities = new Set();
+
+            // 初始化优先级选项
+            function initializePriorityFilter() {
+                const priorities = new Set();
+                const rows = document.querySelectorAll('#myTable tbody tr');
+
+                // 收集所有优先级
+                rows.forEach(row => {
+                    const priorityCell = row.cells[2]; // Priority列
+                    const priority = priorityCell.textContent.trim();
+                    if (priority) {
+                        priorities.add(priority);
+                    }
+                });
+
+                // 生成优先级选项
+                const priorityArray = Array.from(priorities).sort();
+                priorityDropdown.innerHTML = '';
+
+                priorityArray.forEach(priority => {
+                    const count = Array.from(rows).filter(row =>
+                        row.cells[2].textContent.trim() === priority
+                    ).length;
+
+                    const option = document.createElement('div');
+                    option.className = 'priority-option';
+                    option.innerHTML = `
+                        <input type="checkbox" id="priority_${priority}" value="${priority}">
+                        <label for="priority_${priority}">${priority}</label>
+                        <span class="priority-count">${count}</span>
+                    `;
+                    priorityDropdown.appendChild(option);
+                });
+
+                // 绑定复选框事件
+                const priorityCheckboxes = priorityDropdown.querySelectorAll('input[type="checkbox"]');
+                priorityCheckboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            selectedPriorities.add(this.value);
+                        } else {
+                            selectedPriorities.delete(this.value);
+                        }
+                        updatePriorityFilterDisplay();
+                        filterTable();
+                    });
+                });
+            }
+
+            // 更新优先级过滤器显示
+            function updatePriorityFilterDisplay() {
+                if (selectedPriorities.size === 0) {
+                    priorityFilterInput.value = '';
+                    priorityFilterInput.placeholder = '优先级';
+                } else if (selectedPriorities.size === 1) {
+                    priorityFilterInput.value = Array.from(selectedPriorities)[0];
+                } else {
+                    priorityFilterInput.value = `已选择 ${selectedPriorities.size} 个优先级`;
+                }
+            }
+
+            // 优先级过滤器点击事件
+            priorityFilterInput.addEventListener('click', function() {
+                priorityDropdown.classList.toggle('show');
+            });
+
+            // 点击外部关闭下拉框
+            document.addEventListener('click', function(event) {
+                if (!priorityFilterInput.contains(event.target) && !priorityDropdown.contains(event.target)) {
+                    priorityDropdown.classList.remove('show');
+                }
+            });
+
+            // 定义筛选函数
+            function filterTable() {
+                const inputs = document.querySelectorAll('input[type="text"]');
                 const rows = document.querySelectorAll('#myTable tbody tr');
 
                 rows.forEach(row => {
                     const cells = row.getElementsByTagName('td');
-                    const cellText = cells[columnIndex+1].innerText.toLowerCase();
-                    row.style.display = cellText.includes(filter) ? '' : 'none';
+                    let shouldShow = true;
+
+                    // 检查优先级过滤
+                    if (selectedPriorities.size > 0) {
+                        const priority = cells[2].textContent.trim();
+                        if (!selectedPriorities.has(priority)) {
+                            shouldShow = false;
+                        }
+                    }
+
+                    // 检查其他列的文本过滤
+                    for (let i = 0; i < inputs.length; i++) {
+                        if (inputs[i] === priorityFilterInput) continue; // 跳过优先级输入框
+
+                        const filter = inputs[i].value.toLowerCase();
+                        if (filter) {
+                            // 调整列索引：跳过复选框列，优先级列单独处理
+                            let cellIndex;
+                            if (i === 0) { // 标题列
+                                cellIndex = 3;
+                            } else if (i === 1) { // 前置条件列
+                                cellIndex = 4;
+                            } else if (i === 2) { // 步骤列
+                                cellIndex = 5;
+                            } else if (i === 3) { // 预期结果列
+                                cellIndex = 6;
+                            }
+
+                            const cellText = cells[cellIndex].innerText.toLowerCase();
+                            if (!cellText.includes(filter)) {
+                                shouldShow = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    row.style.display = shouldShow ? '' : 'none';
                 });
             }
 
-            // 绑定输入框的事件
-            const inputs = document.querySelectorAll('input');
+            // 绑定输入框的事件（除了优先级输入框）
+            const inputs = document.querySelectorAll('input[type="text"]');
             inputs.forEach((input, index) => {
-                console.log("index",index)
-                input.addEventListener('keyup', () => filterTable(index));
+                if (input !== priorityFilterInput) {
+                    input.addEventListener('keyup', () => filterTable());
+                }
             });
 
-        const exportBtn = document.getElementById('exportBtn');
-        const table = document.getElementById('myTable');
+            // 更新选中计数
+            function updateSelectedCount() {
+                const selectedCount = document.querySelectorAll('.row-checkbox:checked').length;
+                selectedCountSpan.textContent = '已选择: ' + selectedCount + ' 条记录';
+                exportSelectedBtn.disabled = selectedCount === 0;
+            }
 
-        exportBtn.addEventListener('click', function () {
-            let csv = [];
-            {#let row of document.querySelectorAll('#myTable tr')#}
-            {#let row of table.rows#}
-            for (let row of table.rows) {
-                if (row.style.display === 'none') { // 仅导出可见行
-                    continue
+            // 全选功能
+            function selectAll() {
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                selectAllCheckbox.checked = true;
+                updateSelectedCount();
+            }
+
+            // 取消全选功能
+            function deselectAll() {
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                selectAllCheckbox.checked = false;
+                updateSelectedCount();
+            }
+
+            // 绑定全选按钮事件
+            selectAllBtn.addEventListener('click', selectAll);
+            deselectAllBtn.addEventListener('click', deselectAll);
+
+            // 绑定全选复选框事件
+            selectAllCheckbox.addEventListener('change', function() {
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateSelectedCount();
+            });
+
+            // 绑定行复选框事件
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateSelectedCount();
+                    // 检查是否所有行都被选中
+                    const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+                    selectAllCheckbox.checked = allChecked;
+                });
+            });
+
+            // 导出CSV函数
+            function exportToCSV(selectedRows) {
+                let csv = [];
+
+                // 添加表头
+                const headers = ['#', 'Priority', 'Case Title & Description', 'Preconditions (if any)', 'Steps', 'Expected results'];
+                csv.push(headers.map(header => '"' + header + '"').join(','));
+
+                // 添加数据行
+                for (let row of selectedRows) {
+                    if (row.style.display === 'none') {
+                        continue;
+                    }
+                    let cols = Array.from(row.cells).map((cell, index) => {
+                        // 跳过复选框列
+                        if (index === 0) return '';
+
+                        // 提取列表项并保留序号
+                        const listItems = cell.querySelectorAll('li');
+                        const listText = Array.from(listItems).map((li, index) => (index + 1) + '. ' + li.innerText).join('\n');
+
+                        // 如果单元格中有列表项，返回格式化后的列表文本；否则返回单元格文本
+                        let cellText = listText || cell.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+
+                        // 用双引号包裹并转义内部双引号
+                        return '"' + cellText.replace(/"/g, '""') + '"';
+                    }).filter(col => col !== '');
+
+                    // 将列数据用逗号分隔
+                    csv.push(cols.join(','));
                 }
-                let cols = Array.from(row.cells).map(cell => {
-                    // 提取列表项并保留序号
-                    const listItems = cell.querySelectorAll('li');
-                    const listText = Array.from(listItems).map((li, index) => `${index + 1}. ${li.innerText}`).join('\n');
+                return csv.join('\n');
+            }
 
-                    // 如果单元格中有列表项，返回格式化后的列表文本；否则返回单元格文本
-                    let cellText = listText || cell.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-
-                    // 用双引号包裹并转义内部双引号
-                    return `"${cellText.replace(/"/g, '""')}"`;
+            // 导出选定记录
+            exportSelectedBtn.addEventListener('click', function() {
+                const selectedRows = [];
+                rowCheckboxes.forEach((checkbox, index) => {
+                    if (checkbox.checked) {
+                        const row = checkbox.closest('tr');
+                        if (row.style.display !== 'none') {
+                            selectedRows.push(row);
+                        }
+                    }
                 });
 
-                // 将列数据用逗号分隔
-                csv.push(cols.join(','));
-            }
-            const csvString = csv.join('\n');
-            const blob = new Blob([csvString], {type: 'text/csv;charset=utf-8;'});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute('download', 'table.csv');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+                if (selectedRows.length === 0) {
+                    alert('请先选择要导出的记录！');
+                    return;
+                }
+
+                const csvString = exportToCSV(selectedRows);
+                const blob = new Blob([csvString], {
+                    type: 'text/csv;charset=utf-8;'
+                });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', 'selected_records.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // 导出所有记录
+            exportAllBtn.addEventListener('click', function() {
+                const allRows = Array.from(table.querySelectorAll('tbody tr'));
+                const csvString = exportToCSV(allRows);
+                const blob = new Blob([csvString], {
+                    type: 'text/csv;charset=utf-8;'
+                });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', 'all_records.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // 初始化选中计数
+            updateSelectedCount();
+
+            // 初始化优先级过滤器
+            initializePriorityFilter();
         });
-
-    });
-
-</script>
+    </script>
 
 </body>
+
 </html>
